@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- namespace：命名空间，用于隔离sql -->
+<!-- 还有一个很重要的作用，使用动态代理开发DAO，1. namespace必须和Mapper接口类路径一致 -->
+<mapper namespace="com.ss.Dao.StudentDao">
+
+	<!--resultMap标签：映射实体与表
+		type属性：实体类的全路径名
+		id属性:为实体与表的映射取一个任意的唯一的编号
+	 -->
+	<resultMap type="com.ss.pojo.Student" id="StudentMap">
+		<!-- id标签:映射主键属性
+			 result标签:映射非主键属性
+			 property:实体的属性名
+			 column:表的字段名
+			 jdbcType="数据库字段类型 -->
+		<id column="INTID" property="INTID" />
+		<result column="id" property="uuid" />
+		<result column="person_id" property="p_personid" />
+		<result column="create_at" property="p_createTime" />
+		<result column="update_at" property="p_updateTime" />
+		<result column="name" property="p_Name" />
+		<result column="QQ" property="p_qq"/>
+		<result column="TRAINTYPE" property="p_traintype" />
+		<result column="JOINTIME" property="p_jointime" />
+		<result column="GRADUATION" property="p_graduation" />
+		<result column="ONLINEID" property="p_onlineid" />
+		<result column="dailylink" property="p_dailylink" />
+		<result column="oath" property="p_oath" />
+		<result column="senior" property="p_senior" />
+		<result column="source" property="p_source" />
+		<result column="status_" property="p_status" />
+	</resultMap>
+
+
+
+	<select id="getObjectById" parameterType="int" resultMap="StudentMap">
+		select * from Post where INTID = #{INTID}
+	</select>
+
+
+	<select id="getSize" resultType="java.lang.Integer">
+		select count(INTID) from Post;
+	</select>
+
+	<select id="onWorkSize" resultType="java.lang.Integer">
+		select count(INTID) from Post WHERE status_=1;
+	</select>
+
+	<select id="countByVocation"  parameterType="int" resultType="java.lang.Integer">
+		select count(INTID) from Post WHERE vocationID=#{VALUE};
+	</select>
+
+
+	<!-- 查询所有学生
+	理论上resultType要写List<Student>
+	但这里只需书写List中的类型即可，即只需书写Person的全路径名
+	-->
+	<!-- 根据分页数据start 和size查询数据 -->
+	<select id="findByPage" parameterType="Map" resultMap="StudentMap">
+		select * from Post
+		<if test="start!=null and size!=null">
+			limit #{start},#{size}
+		</if>
+	</select>
+
+	<!--增加学生，并拿到新增信息的表主键信息。
+        新增数据，得到主键的外层写法没什么特别，跟普通的insert一样。只不过里面加了selectKey-->
+	<insert id="addObject" parameterType="com.ss.pojo.Student" useGeneratedKeys="true">
+		<!--selectKey  会将 SELECT LAST_INSERT_ID()的结果放入到传入的model的主键里面，
+		keyProperty 对应的model中的主键的属性名，这里是 user 中的id，因为它跟数据库的主键对应
+		useGeneratedKeys="true"把新增加的主键赋值到自己定义的keyProperty（id）中,适用于自增ID
+		order AFTER 表示 SELECT LAST_INSERT_ID() 在insert执行之后执行,多用与自增主键，
+		BEFORE 表示 SELECT LAST_INSERT_ID() 在insert执行之前执行，这样的话就拿不到主键了，
+		这种适合那种主键不是自增的类型
+		resultType 主键类型 -->
+		<selectKey keyProperty="INTID" order="AFTER" resultType="java.lang.Integer">
+			select last_insert_id()
+		</selectKey>
+
+
+		INSERT INTO Post(id,person_id,create_at,update_at,NAME,QQ,TRAINTYPE,
+		JOINTIME,GRADUATION,ONLINEID,dailylink,oath,senior,source,status_)
+		VALUES(UUID(),#{p_personid},#{p_createTime},#{p_updateTime},#{p_Name},#{p_qq},#{p_traintype},#{p_jointime},#{p_graduation},#{p_onlineid},
+		#{p_dailylink},#{p_oath},#{p_senior},#{p_source},#{p_status}
+		);
+	</insert>
+
+
+
+	<!-- 更新学生 -->
+	<update id="updateObject" parameterType="com.ss.pojo.Student">
+		update Post
+
+		<set><!--set标签会去除只有最后一个条件的逗号-->
+			<if test="p_updateTime!=null and p_updateTime!=''">
+				update_at=#{p_updateTime},
+				<if test="p_personid!= null and p_personid!=''">person_id=#{p_personid},</if>
+				<if test="p_Name!= null and p_Name!=''">NAME=#{p_Name},</if>
+				<if test="p_qq!= null and p_qq!=''">QQ=#{p_qq},</if>
+				<if test="p_traintype!= null and p_traintype!=''">TRAINTYPE=#{p_traintype},</if>
+				<if test="p_jointime!= null and p_jointime!=''">JOINTIME=#{p_jointime},</if>
+				<if test="p_graduation!= null and p_graduation!=''">GRADUATION=#{p_graduation},</if>
+				<if test="p_onlineid != null and p_onlineid !=''">ONLINEID=#{p_onlineid},</if>
+				<if test="p_dailylink!= null and p_dailylink!=''">dailylink=#{p_dailylink},</if>
+				<if test="p_oath != null and p_oath !=''">oath=#{p_oath},</if>
+				<if test="p_senior!= null and p_senior!=''">senior=#{p_senior},</if>
+				<if test="p_source != null and p_source !=''">source=#{p_source},</if>
+				<if test="p_status != null and p_status !=''">status_=#{p_status},</if>
+				<if test="vocationID != null and vocationID !=''">vocationID=#{vocationID},</if>
+			</if>
+		</set>
+
+		<where><!--where标签会去除第一个条件的and和or-->
+			<if test="INTID!=null">AND INTID=#{INTID}</if>
+		</where>
+
+	</update>
+
+	<!-- 删除学生 -->
+	<delete id="deleteObject" parameterType="java.lang.Integer" >
+		delete from Post where INTID = #{INTID}
+	</delete>
+
+
+
+
+
+
+
+
+
+
+
+
+<!--	                                      以下内容为方便扩展，未实现                                           -->
+
+
+	<!-- 根据ID查询学生deletePerson
+	如果参数不是一个实体的话，只是一个普通变量，例如:int,double,String
+	这里的#{中间的变量名可以随便写}，不过提倡就用方法的形参
+	-->
+	<select id="getPersonByNumber" parameterType="com.ss.pojo.Person" resultMap="StudentMap">
+		select * from Post where person_id = #{p_personid}
+	</select>
+
+
+	<!-- 查询所有学生
+	理论上resultType要写List<Student>
+	但这里只需书写List中的类型即可，即只需书写Person的全路径名
+	-->
+	<select id="getAll" resultMap="StudentMap">
+		select * from Post
+	</select>
+
+
+
+	<!-- 批量提交   parameterType="java.util.List" -->
+	<insert id="addbatch" >
+		<selectKey keyProperty="uuid" order="AFTER" resultType="java.lang.String">
+			SELECT LAST_INSERT_ID()
+		</selectKey>
+		
+		INSERT INTO Post
+		(id,person_id,create_at,update_at,NAME,QQ,TRAINTYPE,
+		JOINTIME,GRADUATION,ONLINEID,dailylink,oath,senior,source,status_)
+		values
+		<foreach collection="list" item="item" separator="," index="index">
+			(UUID(),#{item.p_personid},#{item.p_createTime},#{item.p_updateTime},#{item.p_Name},#{item.p_qq},#{item.p_traintype},#{item.p_jointime},#{item.p_graduation},
+			#{item.p_onlineid},#{item.p_dailylink},#{item.p_oath},#{item.p_senior},#{item.p_source},#{item.p_status}
+			)
+		</foreach>
+	</insert>
+
+
+	<select id="getPersonByName" parameterType="string" resultMap="StudentMap">
+		select * from Post where NAME = #{name}
+	</select>
+
+
+</mapper>
+
+
+
+

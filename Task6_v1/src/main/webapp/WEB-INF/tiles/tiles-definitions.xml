@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE tiles-definitions PUBLIC
+        "-//Apache Software Foundation//DTD Tiles Configuration 3.0//EN"
+        "http://tiles.apache.org/dtds/tiles-config_3_0.dtd">
+
+<!-- http://tiles.apache.org/framework/config-reference.html -->
+<tiles-definitions>
+
+    <!-- version2 -->
+    <definition name="home" template="/page/template/one.jsp">
+        <put-attribute name="hahahaxi" value="/page/component/title/home_title.jsp"/>
+        <put-attribute name="head" value="/page/component/head.jsp" />
+         <put-attribute name="body" value="/page/component/body/homebody.jsp" />
+        <put-attribute name="foot" value="/page/component/foot.jsp" />
+    </definition>
+
+    <definition name="home.*" extends="home">
+        <put-attribute name="hahahaxi" value="/page/component/title/{1}_title.jsp"/>
+        <put-attribute name="body" value="/page/component/body/{1}body.jsp" />
+    </definition>
+
+
+    <!--    version1
+
+    <definition name="home.vocation" extends="home">
+        <put-attribute name="hahahaxi" value="/page/component/title/vocation_title.jsp"/>
+        <put-attribute name="body" value="/page/component/body/vocationbody.jsp" />
+    </definition>
+
+    <definition name="home.company" extends="home">
+        <put-attribute name="hahahaxi" value="/page/component/title/company_title.jsp"/>
+        <put-attribute name="body" value="/page/component/body/companybody.jsp" />
+    </definition>
+
+-->
+
+</tiles-definitions>

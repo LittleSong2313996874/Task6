@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/context
+       http://www.springframework.org/schema/context/spring-context.xsd
+       http://www.springframework.org/schema/mvc
+       http://www.springframework.org/schema/mvc/spring-mvc.xsd
+       http://www.springframework.org/schema/aop
+       http://www.springframework.org/schema/aop/spring-aop-4.3.xsd
+">
+
+    <!--SpringMvc比Spring先扫描-->
+    <!-- 扫描添加了controller注解的包 -->
+    <context:component-scan base-package="com.ss.controller"/>
+    <context:component-scan base-package="com.ss.aspect"/>
+    <!--使用注解开发，不用配置controller了
+    <bean name="/hello.action" class="com.ss.demo.demoDay1.HelloAction" />
+    -->
+
+    <!--这样会注册RequestMappingHandlerAdapter这个bean，
+    它能处理@RequestMapping注解 -->
+    <mvc:annotation-driven/>
+    <!--使用默认的Servlet来响应静态文件-->
+    <mvc:default-servlet-handler/>
+
+    <!--拦截静态资源-->
+    <mvc:resources location="/page/template/img/" mapping="/u/img/*.png"/>
+    <mvc:resources location="/page/template/img/" mapping="/u/img/*.jpg"/>
+    <mvc:resources location="/page/template/css/" mapping="/u/css/*.css"/>
+
+    <mvc:resources location="/page/template/img/" mapping="/img/*.png"/>
+    <mvc:resources location="/page/template/img/" mapping="/img/*.jpg"/>
+    <mvc:resources location="/page/template/css/" mapping="/css/*.css"/>
+
+
+
+    <!-- 视图解析器 ：tiles -->
+    <bean id="tilesConfigurer" class="org.springframework.web.servlet.view.tiles3.TilesConfigurer">
+        <property name="definitions">
+            <list>
+                <value>/WEB-INF/tiles/tiles-definitions.xml</value>
+
+            </list>
+        </property>
+    </bean>
+    <bean id="viewResolver" class="org.springframework.web.servlet.view.UrlBasedViewResolver">
+        <property name="viewClass" value="org.springframework.web.servlet.view.tiles3.TilesView"/>
+        <property name="order" value="10"/>
+    </bean>
+
+    <!--  视图解析器
+     注意：InternalResourceViewResolver必须总是赋予最低的优先级（最大的order值），
+     因为不管返回什么视图名称，它都将解析视图。如果它的优先级高于其它解析器的优先级的话，
+     它将使得其它具有较低优先级的解析器没有机会解析视图 -->
+    <bean  class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+        <property name="viewClass" value="org.springframework.web.servlet.view.JstlView"></property>
+        <property name="prefix" value="/jsp/"/>
+        <property name="suffix" value=".jsp"/>
+        <property name="order" value="21"/>
+    </bean>
+
+    <!-- 优先级一定要比上面的大-->
+    <bean  class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+        <property name="viewClass" value="org.springframework.web.servlet.view.JstlView"></property>
+        <property name="viewNames" value="json*" />
+        <property name="prefix" value="/jsp/json/"/>
+        <property name="suffix" value=".jsp"/>
+        <property name="order" value="15"/>
+    </bean>
+
+
+    <!-- 配置转发,简化控制器代码
+
+    也可以 view-name="forward:/thehome" 转发；但这里不能用转发
+        因为转发后还是原来的request，我这里是登录界面，在request中没有找到cookie会设置有效cookie到response里，
+        而转发的话request里还是没有有效cookie，我的拦截器判断逻辑是没有有效cookie不能放行的，这样会卡页面。
+    -->
+
+    <mvc:view-controller path="/taskUser" view-name="welcome"/>
+
+
+    <aop:config proxy-target-class="true" />
+    <aop:config>
+        <!--定义切面-->
+        <aop:pointcut expression="execution(* com.ss.controller.*Controller.*(..))" id="logPointCut"/>
+        <aop:aspect id="logAspect" ref="logInterceptor">
+            <!-- 定义切入点 (配置在com.ss.controller下所有的类在调用之前都会被拦截)-->
+            <!--方法执行之前被调用执行的-->
+          <!--  <aop:before method="beforeMethod" pointcut-ref="logPointCut"/>&lt;!&ndash;一个切入点的引用&ndash;&gt;
+            <aop:after method="afterMethod" pointcut-ref="logPointCut"/>一个切入点的引用-->
+            <aop:around method="Around" pointcut-ref="logPointCut"/>
+        </aop:aspect>
+    </aop:config>
+
+
+
+    <mvc:interceptors>
+        <!-- 使用bean定义一个Interceptor，直接定义在mvc:interceptors根下面的Interceptor将拦截所有的请求 -->
+        <!--<bean class="com.ss.util.interceptor.UserLoginInterceptor>-->
+        <mvc:interceptor>
+            <mvc:mapping path="/u/*"/>
+
+            <!-- 定义在mvc:interceptor下面的表示是对特定的请求才进行拦截的 -->
+            <bean class="com.ss.util.interceptor.UserLoginInterceptor"/>
+        </mvc:interceptor>
+    </mvc:interceptors>
+
+</beans>
+
+
